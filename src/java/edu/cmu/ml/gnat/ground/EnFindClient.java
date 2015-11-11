@@ -6,9 +6,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.LineNumberReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,7 +30,8 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 public class EnFindClient {
-//	private static final String ORIGIN = "http://curtis.ml.cmu.edu";
+	//?key=KNVRJ5&origin=http://curtis.ml.cmu.edu&minScore=0.3&maxMentions=-1&type=json";
+	//	private static final String ORIGIN = "http://curtis.ml.cmu.edu";
 	private static final String ORIGIN = "api";
 	private static final String TYPE = "json";
 	private static final String MAXMENTIONS = "-1";
@@ -37,7 +40,6 @@ public class EnFindClient {
 	private static final String RESPONSEFORMAT = "json";
 	private static final String URL="http://service.enfind.com/process";
 	private static final int MAX_ARTICLE_LENGTH = 20000;
-	//?key=KNVRJ5&origin=http://curtis.ml.cmu.edu&minScore=0.3&maxMentions=-1&type=json";
 	public CloseableHttpClient httpclient;
 	public Gson gson;
 	public boolean first=true;
@@ -57,6 +59,17 @@ public class EnFindClient {
 		formData.add(new BasicNameValuePair("type",TYPE));
 		formData.add(new BasicNameValuePair("responseFormat",RESPONSEFORMAT));
 		return formData;
+	}
+	
+	public int hashUrlEncodedText(String text) throws UnsupportedEncodingException, IOException {
+		List<NameValuePair> dummy = new ArrayList<NameValuePair>();
+		dummy.add(new BasicNameValuePair("x",text));
+		byte[] bytes = new byte[1024];
+		InputStream in = new UrlEncodedFormEntity(dummy).getContent();
+		in.read(); in.read(); // eat the "x="
+		int n = in.available();
+		in.read(bytes, 0, n);
+		return hashArticle(new String(bytes));
 	}
 	
 	public int hashArticle(String text) {
@@ -81,6 +94,8 @@ public class EnFindClient {
 		r.close();
 		CachedArticle a = gson.fromJson(sb.toString(), new TypeToken<CachedArticle>(){}.getType());
 		a.setContents(a.getContents().trim().replaceAll("\\s\\s*", " "));
+		
+		//int articleId = hashUrlEncodedText(a.getContents());
 		int articleId = hashArticle(a.getContents());
 		
 		if (a.getContents().equals("")) {
@@ -115,6 +130,13 @@ public class EnFindClient {
 		List<EntityLink> extractions = null;
 		try {
 			response = httpclient.execute(httppost);
+			
+//			byte[] bytes = new byte[1024];
+//			InputStream in = httppost.getEntity().getContent();
+//			int n = in.available();
+//			in.read(bytes, 0, n);
+//			System.err.println("Sending:\n"+httppost.toString()+"\n"+new String(bytes,0,n));
+			
 			System.err.println(response.getStatusLine());
 		    HttpEntity entity = response.getEntity();
 		    if (entity != null) {
@@ -127,7 +149,6 @@ public class EnFindClient {
 		        	return -1;
 		        }
 		        result = result.substring(result.indexOf('{'), result.lastIndexOf('}')+1).replaceAll("\\\\\"", "\"");
-//		        System.out.println(result.replaceAll(",", ",\n"));
 		        
 		        w = gson.fromJson(
 		        		result, 
