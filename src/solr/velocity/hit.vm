@@ -1,0 +1,15 @@
+#set($docId = $doc.getFieldValue('id'))
+#set($resultType = $doc.getFieldValue('doctype'))
+<div class="result-document">
+#if($resultType=='entity')
+  #parse("entity-doc.vm")
+#elseif($resultType=='grounding')
+  #parse("grounding-doc.vm")
+#elseif($resultType=='assumption')
+  #parse("assumption-doc.vm")
+#elseif($resultType=='seed')
+  #parse("seed-doc.vm")
+#elseif($resultType=='context')
+  #parse("context-doc.vm")
+#end
+</div>

@@ -12,6 +12,16 @@ import com.wcohen.ss.lookup.SoftTFIDFDictionary;
 
 /**
  * Commandline interface to a secondstring SoftTFIDFDictionary for storing and lookups.
+ * 
+ * Alias files are tab-separated:
+ *   <entityid> <surface-form-1> <surface-form-2> ...
+ *  
+ * Query files are tab-separated:
+ *   <queryid> <query-string>
+ *   
+ * Results files are tab-separated:
+ *   <queryid> <entityid> <matchscore>
+ * 
  * @author krivard
  *
  */
@@ -23,9 +33,10 @@ public class MatchDictionary {
 	};
 	public void usage() {
 		System.err.println("Usage:");
-		System.err.println("\t help                                                - This message");
-		System.err.println("\t save dictfile aliasFile1 aliasFile2 ...             - Load entity aliases into a dictionary");
-		System.err.println("\tquery dictfile resultsFile queryFile1 queryFile2 ... - Run queries against a dictionary and save results");
+		System.err.println("\t   help                                                - This message");
+		System.err.println("\t   save dictfile aliasFile1 aliasFile2 ...             - Load entity aliases into a dictionary");
+		System.err.println("\t  query dictfile resultsFile queryFile1 queryFile2 ... - Run queries against a dictionary and save results");
+		System.err.println("\tquery+N dictfile resultsFile queryFile1 queryFile2 ... - Run queries against a dictionary and save top N results");
 		
 	}
 	public void save(String[] args) throws FileNotFoundException, IOException {
@@ -43,12 +54,14 @@ public class MatchDictionary {
 		dict.freeze();
 		dict.saveAs(saveFile);
 	}
-	public void query(String[] args) throws FileNotFoundException, IOException {
+	public void query(String[] args, String opt) throws FileNotFoundException, IOException {
 		if (args.length<4) {
 			System.err.println("Expected at least 3 file arguments");
 			this.usage();
 			System.exit(1);
 		}
+		int top = -1;
+		if (opt != null) top = Integer.parseInt(opt);
 		System.err.println("Loading dictionary from file "+args[1]+"...");
 		SoftTFIDFDictionary dict = SoftTFIDFDictionary.restore(new File(args[1]));
 		BufferedWriter results = new BufferedWriter(new FileWriter(args[2]));
@@ -66,12 +79,13 @@ public class MatchDictionary {
 				}
 				line = line.trim();
 				if (line.startsWith("#")) continue;
-				int n = dict.lookup(0.1, line);
+				int sep = line.indexOf("\t");
+				String query = line.substring(sep+1);
+				String qid = line.substring(0,sep);
+				int n = dict.lookup(0.1, query);
 				for (int k=0; k<n; k++) {
-					if (k>10) break;
-					results.write(String.valueOf(in.getLineNumber()));
-					results.write("\t");
-					results.write(line);
+					if (top>0 && k>top) break;
+					results.write(qid);
 					results.write("\t");
 					results.write((String) dict.getValue(k));
 					results.write("\t");
@@ -85,11 +99,17 @@ public class MatchDictionary {
 	}
 	public static final void main(String[] args) throws FileNotFoundException, IOException {
 		MatchDictionary d = new MatchDictionary();
-		if (args.length == 0) args = new String[] {"help"};
-		switch(CMD.valueOf(args[0])) {
+		String cmd = args.length == 0 ? "help" : args[0];
+		String opt = null;
+		if (cmd.indexOf("+")>0) {
+			int i = cmd.indexOf("+");
+			opt = cmd.substring(i+1);
+			cmd = cmd.substring(0,i);
+		}
+		switch(CMD.valueOf(cmd)) {
 		case help: d.usage(); break;
 		case save: d.save(args); break;
-		case query: d.query(args); break;
+		case query: d.query(args,opt); break;
 		}
 	}
 }

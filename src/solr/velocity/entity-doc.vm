@@ -1,0 +1,57 @@
+<div class="result-title">
+[Entity]
+#if ($doc.getFieldValue('innername'))
+#set($name = $doc.getFieldValue('innername'))
+#else
+#set($name = $esc.xml($doc.getFieldValue('id')))
+#end
+
+<b>$name</b><span class="mlt">   
+##if($params.getBool('mlt', false) == false)<a href="#lensNoQ&q=id:$docId&mlt=true">More Like This</a>#end
+</span>
+<!-- #field('score') -->
+</div>
+##do we have a physical location for this entity
+#if($doc.getFieldValue('innerlatlong'))
+#set($geoloc = $doc.getFieldValue('innerlatlong'))
+<div class="map"><img src="http://maps.google.com/maps/api/staticmap?&zoom=12&size=150x80&maptype=roadmap&markers=$doc.getFieldValue('innerlatlong')&sensor=false" /><div><small><a target="_map" href="http://maps.google.com/?q=$geoloc&amp;source=embed">Larger Map</a></small></div></div>#end
+<div>Id: <a href="#url_for_home?q=uris:$doc.getFieldValue('id')">$esc.xml($doc.getFieldValue('id'))</a></div>
+<div>Source: <a href="#url_for_home?q=$doc.getFieldValue('source')">#field('source')</a></div>
+<div>Type: 
+#if($doc.getFieldValue('innertype').size()>1)
+<ul>
+#foreach($type in $doc.getFieldValue('innertype'))
+    <li><a href="#url_for_home?q=uris:$type">$esc.xml($type)</a></li>
+#end
+</ul>
+#else <a href="#url_for_home?q=uris:$doc.getFieldValue('innertype')[0]">$esc.xml($doc.getFieldValue('innertype')[0])</a>
+#end</div>
+
+#if($doc.getFieldValue('innercity'))<div>City: 
+#set($link = $doc.getFieldValue('innercity') != '[malformed]')
+#if($link)<a href="#url_for_home?q=$doc.getFieldValue('innercity')">#end#field('innercity')#if($link)</a>#end</div>#end
+
+#if($doc.getFieldValue('innercountry'))<div>Country: 
+#set($link = $doc.getFieldValue('innercountry') != '[malformed]')
+#if($link)<a href="#url_for_home?q=$doc.getFieldValue('innercountry')">#end#field('innercountry')#if($link)</a>#end</div>#end
+
+#if($doc.getFieldValue('source')=='foursquare')<div>Shouts: #field('innerscore')</div>#end
+<div class="mlt">
+  #set($mlt = $mltResults.get($docId))
+  #set($mltOn = $params.getBool('mlt'))
+  #if($mltOn == true)<div class="field-name">Similar Items</div>#end
+  #if ($mltOn && $mlt && $mlt.size() > 0)
+  <ul>
+    #foreach($mltHit in $mlt)
+      #set($mltId = $mltHit.getFieldValue('id'))
+      <li><div><a href="#url_for_home?q=id:$mltId">$mltId</a></div><div><span class="field-name">Name:</span> $mltHit.getFieldValue('name')</div>
+        <div><span class="field-name">Price:</span> $!number.currency($mltHit.getFieldValue('price')) <span class="field-name">In Stock:</span> $mltHit.getFieldValue('inStock')</div>
+
+      </li>
+    #end
+  </ul>
+  #elseif($mltOn && $mlt.size() == 0)
+    <div>No Similar Items Found</div>
+  #end
+</div>
+#parse('debug.vm')

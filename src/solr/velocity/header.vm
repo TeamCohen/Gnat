@@ -1,0 +1,4 @@
+<div id="head" style="overflow:hidden">
+  <div style="float:left"><a href="#url_for_home#if($request.params.get('debugQuery'))?debugQuery=true#end"><img src="#{url_root}/img/solr.png" id="logo"/></a></div>
+<div style="xborder:1pt solid green;font-size:18pt;margin-left:150px;margin-top:40px">GNAT dataset: Locations &amp; Performers</div>
+</div>
