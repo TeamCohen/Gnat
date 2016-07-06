@@ -6,7 +6,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.Arrays;
 
-import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
 import com.wcohen.ss.DistanceLearnerFactory;
 import com.wcohen.ss.api.StringDistanceLearner;
 import com.wcohen.ss.expt.Blocker;
