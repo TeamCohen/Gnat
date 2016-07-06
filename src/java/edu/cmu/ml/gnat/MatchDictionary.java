@@ -82,7 +82,7 @@ public class MatchDictionary {
 				int sep = line.indexOf("\t");
 				String query = line.substring(sep+1);
 				String qid = line.substring(0,sep);
-				int n = dict.lookup(0.1, query);
+				int n = dict.lookup(0.001, query);
 				for (int k=0; k<n; k++) {
 					if (top>0 && k>top) break;
 					results.write(qid);
