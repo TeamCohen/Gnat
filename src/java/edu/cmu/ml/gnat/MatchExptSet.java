@@ -1,9 +1,14 @@
 package edu.cmu.ml.gnat;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.Arrays;
 
 import org.apache.log4j.Logger;
@@ -22,15 +27,23 @@ public class MatchExptSet {
 	StringDistanceLearner learner;
 	BufferedReader read;
 	String filename;
+	PrintStream write;
 	String[] commands;
 	
 	public MatchExptSet(String[] argv) {
 		try {
+			if (argv.length < 5) {
+				System.err.println("Usage:\n\tblocker learner matchdatafile outputfile commands...");
+				System.exit(1);
+			}
 			blocker = (Blocker)Class.forName(MatchExpt.BLOCKER_PACKAGE+argv[0]).newInstance();
 		    learner = DistanceLearnerFactory.build( argv[1] );
 		    filename = argv[2];
 		    read = new BufferedReader(new FileReader(filename));
-		    commands = Arrays.copyOfRange(argv, 3, argv.length);
+		    String outfile = argv[3];
+		    if ("-".equals(outfile)) write = System.out;
+		    else write = new PrintStream(new FileOutputStream(outfile));
+		    commands = Arrays.copyOfRange(argv, 4, argv.length);
 		    for (String c:commands) { if (!MatchExpt.commandSupported(c)) throw new RuntimeException("illegal command "+c); }
 		} catch (InstantiationException e) {
 			// TODO Auto-generated catch block
@@ -51,11 +64,11 @@ public class MatchExptSet {
 	    MatchExpt expt = new MatchExpt(data,learner,blocker);
 	    for (String c : commands) {
 	    	if (c.equals("-dump")) {
-	    		System.out.println("# "+batchid);
-                expt.dumpResultsAsStrings(System.out);
+	    		write.println("# "+batchid);
+                expt.dumpResultsAsStrings(write);
             } else if (c.equals("-dumpIds")) {
-	    		System.out.println("# "+batchid);
-                expt.dumpResultsAsIds(System.out);
+	    		write.println("# "+batchid);
+                expt.dumpResultsAsIds(write);
             }
 	    }
 	}
