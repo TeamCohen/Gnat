@@ -6,6 +6,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.Arrays;
 
+import org.apache.log4j.Logger;
+
 import com.wcohen.ss.DistanceLearnerFactory;
 import com.wcohen.ss.api.StringDistanceLearner;
 import com.wcohen.ss.expt.Blocker;
@@ -15,6 +17,7 @@ import com.wcohen.ss.expt.MatchExpt;
 
 
 public class MatchExptSet {
+	Logger log = Logger.getLogger(MatchExptSet.class);
 	Blocker blocker;
 	StringDistanceLearner learner;
 	BufferedReader read;
@@ -74,6 +77,7 @@ public class MatchExptSet {
 		    	}
 		    	// MatchData has been set up; now add the instance:
 		    	data.addInstance(parts[1],parts[2],parts[3]);
+		    	if (log.isDebugEnabled()) log.debug("added "+parts[1]+"/"+parts[2]+"/"+parts[3]);
 		    }
 			finishBatch(data,batchid);
 		} catch (IOException e) {
