@@ -19,12 +19,14 @@ def doMain(fieldlist,constantValues):
         for vi in range(len(vlist)):
             if vlist[vi].startswith("@python"):
                 vlist[vi] = eval(vlist[vi][7:])
-            elif len(vlist[vi]) == 0:
+            if len(vlist[vi]) == 0:
                 vlist[vi] = None
         if len(vlist) != N:
             assert "Expected %d fields on line %d (saw %d)" % (N,i,len(vlist))
         x = dict(template)
         x.update(zip(fields,vlist))
+        for k in x.keys():
+            if x[k] == None: del x[k]
         if genId: x['id'] = "%s%d" % (template['id'],i)
         if delim: print ","
         else: delim=True
